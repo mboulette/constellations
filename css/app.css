@@ -1,0 +1,92 @@
+html, body {
+    overflow: hidden;
+    width   : 100%;
+    height  : 100%;
+    margin  : 0;
+    padding : 0;
+
+    background-color: #000;
+}
+
+#renderCanvas {
+    width   : 100%;
+    height  : 100%;
+    touch-action: none;
+}
+
+.box {
+    position: absolute;
+    top : 20px;
+    right : 20px;
+
+    border-radius: 20px;
+    border: 1px solid yellow;
+    padding: 16px 16px 16px 16px;
+    width: 250px;
+    
+    color : yellow;
+    background-color: rgba(0, 0, 0, 0.5);
+    font-family: Arial;
+    text-align: center;
+}
+
+.box a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.planetInfo {
+    display: none;
+    top : 90px;
+    right : 20px;
+
+    width: 250px;
+    height: 350px;
+    text-align: left;
+}
+
+.planetInfo h1 {
+    text-align: center;
+    margin: 0 5px 15px 5px;
+    font-size: 130%;
+}
+
+.planetInfo p {
+    font-size: 80%;
+    margin: 0;
+}
+
+.planetInfo a.close {
+    float: right;
+    color: inherit;
+    text-decoration: none;   
+}
+
+.planetCenter {
+    position: absolute;
+    bottom : 30px;
+    left : 50%;
+    width: 300px;
+}
+
+.planetName {
+    display: none;
+    position: relative;
+    left: -50%;
+    top : initial;
+    right : initial;
+
+    color : green;
+    border: 1px solid green;
+}
+
+.planetName h1 {
+    text-align: center;
+    margin: 0;
+    font-size: 100%;
+}
+
+.zoom {
+    font-size: 200%;
+}
+
