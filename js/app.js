@@ -1,22 +1,21 @@
+window.speechSynthesis.getVoices();
+
 var scene;
-var synthesis;
 
-var loadVoice = function() {
-
-    console.log('voice');
-
+var createUtterance = function(text) {
     var $voices = window.speechSynthesis.getVoices();
-    synthesis = new SpeechSynthesisUtterance();
-
+    utterance = new SpeechSynthesisUtterance();
+   
     for(i = 0; i < $voices.length ; i++) {
-        if ($voices[i].lang == 'fr-CA') {
-            synthesis.voice = $voices[i];
+        if ($voices[i].name == 'Thomas') {
+            utterance.voice = $voices[i];
         }
     }
-
-    synthesis.rate = 1;
-    synthesis.pitch = 0.6;
-};
+   
+    utterance.rate = 1.3;
+    utterance.text = text;
+    return utterance;
+}
 
 
 $(function() {
@@ -26,9 +25,6 @@ $(function() {
     var spheres = [];
     var selected = '';
     var read = true;
-
-    loadVoice();
-
 
     var engine = new BABYLON.Engine(canvas, true,  { stencil: true });
 
@@ -196,8 +192,7 @@ $(function() {
                     selected = eventData.pickInfo.pickedMesh.id;
                     $('#'+selected).show();
 
-                    synthesis.text = $('#'+selected+' .planet-description').text();
-                    if (read) window.speechSynthesis.speak(synthesis);
+                    if (read) window.speechSynthesis.speak(createUtterance($('#'+selected+' .planet-description').text()));
 
                     smoothSetTarget(
                         eventData.pickInfo.pickedMesh.position,
