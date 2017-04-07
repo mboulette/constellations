@@ -12,7 +12,7 @@ var createUtterance = function(text) {
         }
     }
    
-    utterance.rate = 1.3;
+    utterance.rate = 1;
     utterance.text = text;
     return utterance;
 }
@@ -66,14 +66,14 @@ $(function() {
 
     for (var i = planets.length - 1; i >= 0; i--) {
 
-        var position = 'X'+planets[i].position.x+' Y'+planets[i].position.y+' Z'+planets[i].position.z;
+        var position = '&Xscr;:'+planets[i].position.x+',  &Yscr;:'+planets[i].position.y+',  &Zscr;:'+planets[i].position.z;
         
         //Info
         $planetInfo = $('.planetInfo.template').clone();
 
         $planetInfo.find('.planet-name').text(planets[i].name);
         $planetInfo.find('.planet-code').text(planets[i].code);
-        $planetInfo.find('.planet-position').text(position);
+        $planetInfo.find('.planet-position').html(position);
         $planetInfo.find('.planet-size').html( new Array(planets[i].size + 1).join('&#9733;') );
         $planetInfo.find('.planet-rhodium').html( new Array(planets[i].rhodium + 1).join('&#9733;'));
         $planetInfo.find('.planet-hazard').html( new Array(planets[i].hazard + 1).join('&#9733;'));
@@ -98,17 +98,26 @@ $(function() {
         //Materials
         materials[i] = new BABYLON.StandardMaterial("texture-"+i, scene);
         materials[i].diffuseTexture = new BABYLON.Texture(planets[i].texture, scene);
-        materials[i].bumpTexture = new BABYLON.Texture("img/bump.jpg", scene);
         materials[i].emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
         materials[i].specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+        if (planets[i].color.toUpperCase() != '#FFFFFF') {
+            materials[i].diffuseColor = new BABYLON.Color3.FromHexString(planets[i].color.toUpperCase());
+        }
+        
+        if (planets[i].bump == '') {
+            materials[i].bumpTexture = new BABYLON.Texture("img/bump.jpg", scene);
+        } else {
+            materials[i].bumpTexture = new BABYLON.Texture(planets[i].bump, scene);
+        }
 
         //Spheres
         spheres[i] = BABYLON.Mesh.CreateSphere(planets[i].code, 16, (planets[i].size * 2), scene);
         spheres[i].actionManager = new BABYLON.ActionManager(scene);
         spheres[i].checkCollisions = true;
-        spheres[i].position.x = (planets[i].position.x * 50);
-        spheres[i].position.y = (planets[i].position.y * 50);
-        spheres[i].position.z = (planets[i].position.z * 50);
+        spheres[i].position.x = (planets[i].position.x);
+        spheres[i].position.y = (planets[i].position.y);
+        spheres[i].position.z = (planets[i].position.z);
         spheres[i].material = materials[i];
 
     };
@@ -263,7 +272,7 @@ $(function() {
     });
 
     $(document).on('click', '.goto-center', function(event){                  
-        var position = new BABYLON.Vector3($('#input-x').val()*50, $('#input-y').val()*50, $('#input-z').val()*50);
+        var position = new BABYLON.Vector3($('#input-x').val(), $('#input-y').val(), $('#input-z').val());
         smoothSetTarget(position, function(){smoothZoom(position)} );
         $('#renderCanvas').focus();
     });
