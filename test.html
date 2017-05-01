@@ -1,3 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
+    <title>Carte des planètes</title>
+
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <div class="planetCenter">
+        <div class="box planetName">
+            <h1></h1>
+        </div>
+    </div>
+
+    <div class="box">
+        X <input id="input-x" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+        Y <input id="input-y" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+        Z <input id="input-z" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+        <a href="#" class="goto-center" alt="Centrer sur Rh-Paradize" title="Centrer sur Rh-Paradize"><img src="img/ico-target.png" style="vertical-align: middle;"></a>
+        <a href="#" class="stop-play" alt="Arrêter / Démarrer la lecture" title="Arrêter / Démarrer la lecture"><img src="img/ico-sound-on.png" style="vertical-align: middle;"></a>
+    </div>
+
+    <div id="placeholder">
+
+        <div class="box planetInfo">
+            <a href="#" class="close">x</a>
+            <h1 class="planet-name">Template</h1>
+            <strong>Code:</strong> <span class="planet-code"></span><br/>
+            <strong>Position:</strong> <span class="planet-position"></span><br/>
+            <strong>Taille:</strong> <span class="planet-size"></span><br/>
+            <strong>Rhodium:</strong> <span class="planet-rhodium"></span><br/>
+            <strong>Menace:</strong> <span class="planet-hazard"></span><br/><br/>
+            
+            <strong>Description:</strong> 
+            <p class="planet-description"></p>
+
+            <strong>Distance:</strong> <span class="planet-distance"></span> <a href="#" class="zoom"><img src="img/ico-zoom.png" valign="middle"></a>
+        </div>
+    </div>
+
+    <script src="../inscriptions/planets"></script>
+    <!-- <sc ript src="js/planets.js"></sc ript>-->
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="js/hand.minified-1.3.7.js"></script>
+    <script src="js/babylon.custom.js"></script>
+    <script>
+
 window.speechSynthesis.getVoices();
 
 var scene;
@@ -402,3 +453,10 @@ $(function() {
 
 
 });
+
+
+    </script>
+
+
+</body>
+</html>
