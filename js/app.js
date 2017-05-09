@@ -19,6 +19,7 @@ var createUtterance = function(text) {
 
 
 $(function() {
+$.getJSON('../inscriptions/planets', function(planets) {
 
     var canvas = document.getElementById('renderCanvas');
     var materials = [];
@@ -65,7 +66,7 @@ $(function() {
     // light
     var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 0, 0), scene);
     //light.intensity = 1;
-    light.range = 10000;
+    light.range = 4000;
     light.parent = camera;
 
     loadPlanets(planets.length - 1);
@@ -401,4 +402,5 @@ $(function() {
 
 
 
+});
 });
