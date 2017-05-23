@@ -2,33 +2,25 @@ window.speechSynthesis.getVoices();
 
 var scene;
 
-var createUtterance = function(text) {
-    var $voices = window.speechSynthesis.getVoices();
-    utterance = new SpeechSynthesisUtterance();
-   
-    for(i = 0; i < $voices.length ; i++) {
-        if ($voices[i].name == 'Thomas') {
-            utterance.voice = $voices[i];
-        }
-    }
-   
-    utterance.rate = 1;
-    utterance.text = text;
-    return utterance;
-}
-
-
 $(function() {
-$.getJSON('../inscriptions/planets', function(planets) {
+
+eval(function(p,a,c,k,e,d){e=function(c){return c};if(!''.replace(/^/,String)){while(c--){d[c]=k[c]||c}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('$.3(\'../2/0\',1(0){4 0=5.8(7(0));6(0)});',9,9,'planets|function|inscriptions|get|var|JSON|loadScene|atob|parse'.split('|'),0,{}));
+
+var loadScene = function(planets) {
 
     var canvas = document.getElementById('renderCanvas');
     var materials = [];
     var spheres = [];
+    var constellations = {};
     var selected = -1;
     var read = true;
     var density = 250;   // density
+    //var count_asteroid = 10000;
     var count_asteroid = 10000;
     var total_asteroid = count_asteroid;
+    var currentlyZooming = false;
+
+    var lines;
 
 
 
@@ -47,16 +39,43 @@ $.getJSON('../inscriptions/planets', function(planets) {
     highlight.outerGlow = true;
     highlight.innerGlow = true;
 
+    var redglow = new BABYLON.HighlightLayer("redglow", scene);
+    redglow.outerGlow = false;
+    redglow.innerGlow = true;
+    redglow.blurVerticalSize = 0.1;
+    redglow.blurHorizontalSize = 0.1;
+
     // Skybox
+    /*
     var skybox = BABYLON.MeshBuilder.CreateBox("skybox", {size:8000}, scene);
     var skyboxMaterial = new BABYLON.StandardMaterial("skybox", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("img/skybox", scene);
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("img/skybox", scene, ["_px.jpg", "_py.jpg", "_pz.jpg", "_nx.jpg", "_ny.jpg", "_nz.jpg"]);
+    //skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("img/skybox", scene);
     skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
     skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
     //skybox.infiniteDistance = true;
+    */
+
+    // Skybox
+    //var skybox = BABYLON.MeshBuilder.CreateBox("skybox", {size:8000}, scene);
+    var skybox = BABYLON.Mesh.CreateSphere("skybox", 32, 8000, scene);
+    var skyboxMaterial = new BABYLON.StandardMaterial("skybox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    //skyboxMaterial.reflectionTexture = new BABYLON.Texture("img/ESO_-_Milky_Way.jpg", scene, true);
+    //skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+
+    var textureTask = assetsManager.addTextureTask('task-skybox', "img/ESO_-_Milky_Way.jpg");
+    textureTask.onSuccess = function(task) {
+        skyboxMaterial.reflectionTexture = task.texture;
+        skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
+    }
+        
 
     // camera
     var camera = new BABYLON.TouchCamera("camera", new BABYLON.Vector3(0, 0, -100), scene);
@@ -71,11 +90,15 @@ $.getJSON('../inscriptions/planets', function(planets) {
 
     loadPlanets(planets.length - 1);
 
+    materials_line = new BABYLON.StandardMaterial("line", scene);
+    materials_line.diffuseColor = BABYLON.Color3.Green();
+
 
     function loadPlanets(i) {
 
         engine.loadingUIText = "Chargement des planètes " + (planets.length - i) + " / " + planets.length + "...";
       
+
         //Materials
         materials[i] = new BABYLON.StandardMaterial("texture-"+i, scene);
         materials[i].emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
@@ -93,15 +116,25 @@ $.getJSON('../inscriptions/planets', function(planets) {
 
         if (planets[i].color.toUpperCase() != '#FFFFFF') {
             materials[i].diffuseColor = new BABYLON.Color3.FromHexString(planets[i].color.toUpperCase());
-        }
-                  
+        }           
+
         //Spheres
         spheres[i] = BABYLON.Mesh.CreateSphere(i, 16, (planets[i].size * 3), scene);
-        spheres[i].actionManager = new BABYLON.ActionManager(scene);
         spheres[i].position.x = (planets[i].position.x);
         spheres[i].position.y = (planets[i].position.y);
         spheres[i].position.z = (planets[i].position.z);
         spheres[i].material = materials[i];
+
+        planets[i].constellation = planets[i].name.split(' ')[0];
+        if (!Array.isArray(constellations[planets[i].constellation])) constellations[planets[i].constellation] = [];
+        constellations[planets[i].constellation].push(i);
+
+        var param = (new URL(document.location)).searchParams;
+        if (param.has('r') && planets[i].rhodium > 0) {
+            redglow.addMesh(spheres[i], BABYLON.Color3.Red());
+        }
+
+
 
         i--;
         if (i >= 0) {
@@ -109,6 +142,7 @@ $.getJSON('../inscriptions/planets', function(planets) {
                 loadPlanets(i);
             });
         } else {
+
             setTimeout(function(){
                 loadAsteroid()
             });
@@ -185,21 +219,53 @@ $.getJSON('../inscriptions/planets', function(planets) {
 
     function smoothSetTarget(position, callback) {
         var camera = scene.activeCamera;
-        var start = new BABYLON.Vector3(camera.getTarget().x, camera.getTarget().y, camera.getTarget().z);
         
-        camera.setTarget(position);
-        var goal = new BABYLON.Vector3(camera.rotation.x, camera.rotation.y, camera.rotation.z);
-        camera.setTarget(start);
+        var tmpCam = new BABYLON.TargetCamera("tmpCam", new BABYLON.Vector3(camera.position.x, camera.position.y, camera.position.z), scene);
+        tmpCam.setTarget(position);
 
+        var fromRotation = new BABYLON.Vector3(camera.rotation.x, camera.rotation.y, camera.rotation.z);
+        var toRotation = new BABYLON.Vector3(tmpCam.rotation.x, tmpCam.rotation.y, tmpCam.rotation.z);
 
-        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "rotation", 30, 10, camera.rotation, goal, 2, null, function(){
+        
+        if (Math.abs(fromRotation.x-toRotation.x)> Math.PI) {
+            if ((fromRotation.x-toRotation.x)>0) {
+                fromRotation.x = fromRotation.x-Math.PI*2;
+            } else {
+                fromRotation.x = fromRotation.x+Math.PI*2;
+            }
+        }
+
+        if (Math.abs(fromRotation.y-toRotation.y)> Math.PI) {
+            if ((fromRotation.y-toRotation.y)>0) {
+                fromRotation.y = fromRotation.y-Math.PI*2;
+            } else {
+                fromRotation.y = fromRotation.y+Math.PI*2;
+            }
+        }
+
+        if (Math.abs(fromRotation.z-toRotation.z)> Math.PI) {
+            if ((fromRotation.z-toRotation.z)>0) {
+                fromRotation.z = fromRotation.z-Math.PI*2;
+            } else {
+                fromRotation.z = fromRotation.z+Math.PI*2;
+            }
+        }
+        
+
+        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "rotation", 30, 10, fromRotation, toRotation, 2, null, function(){
             callback();
         });
+
+        tmpCam.dispose();
         
     };
 
 
     function smoothFocus(position) {
+
+        if (currentlyZooming) return;
+
+        currentlyZooming = true;
 
         var camera = scene.activeCamera;
         var tmp = BABYLON.Mesh.CreateSphere("tmp", 16, 1, scene);
@@ -213,11 +279,17 @@ $.getJSON('../inscriptions/planets', function(planets) {
 
         tmp.dispose();
 
-        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "position", 30, 10, camera.position, tmp_position, 2);
+        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "position", 30, 10, camera.position, tmp_position, 2, null, function(){
+            currentlyZooming = false;
+        });
     }
 
 
     function smoothZoom(position) {
+
+        if (currentlyZooming) return;
+
+        currentlyZooming = true;
 
         var camera = scene.activeCamera;
         var tmp = BABYLON.Mesh.CreateSphere("tmp", 16, 1, scene);
@@ -226,7 +298,7 @@ $.getJSON('../inscriptions/planets', function(planets) {
         var pos = position.subtract(camera.position);
         
         tmp.position = position.clone();
-        tmp.translate(pos, (-20 / distance), 0);
+        if (distance >= 20) tmp.translate(pos, (-20 / distance), 0);
         tmp_position = tmp.position;
 
         tmp.dispose();
@@ -235,70 +307,59 @@ $.getJSON('../inscriptions/planets', function(planets) {
         frames = Math.min(frames, 50);
         frames = Math.max(frames, 10);
 
-        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "position", 30, frames, camera.position, tmp_position, 2);
+        var anim = BABYLON.Animation.CreateAndStartAnimation("anim", camera, "position", 30, frames, camera.position, tmp_position, 2, null, function(){
+            currentlyZooming = false; 
+        });
     }
 
 
-    scene.onPointerObservable.add(function (eventData, eventState) {
-        
-        $('.planetName').hide();
+    function showPlanetInfo(index) {
+        var position = '&Xscr;:'+planets[index].position.x+',  &Yscr;:'+planets[index].position.y+',  &Zscr;:'+planets[index].position.z;
 
-        for (var i = scene.meshes.length - 1; i >= 0; i--) {
-            if (selected != scene.meshes[i].id) scene.highlightLayers[0].removeMesh(scene.meshes[i]);
-        }
+        $('.planetInfo .planet-name').text(planets[index].name);
+        $('.planetInfo .planet-code').text(planets[index].code);
+        $('.planetInfo .planet-position').html(position);
+        $('.planetInfo .planet-size').html( new Array(planets[index].size + 1).join('&#9733;') );
+        $('.planetInfo .planet-rhodium').html( new Array(planets[index].rhodium + 1).join('&#9733;'));
+        $('.planetInfo .planet-hazard').html( new Array(planets[index].hazard + 1).join('&#9733;'));
+        $('.planetInfo .planet-description').text(planets[index].description);
+        $('.planetInfo .zoom').data("id", index);
 
-        canvas.style.cursor = "default";
+        $('.planetInfo').show();
+    }
 
-        if (eventData.pickInfo.hit && eventData.pickInfo.pickedMesh.id != 'skybox') {
+    function drawConstellationLines(index) {
 
-            canvas.style.cursor = "pointer";
+        var plantets_distance = [];
+        var arr_pos = [];
+        var first_point = null;
 
-            if (eventData.type == 1) {
-                $('.planetInfo').hide();
-                window.speechSynthesis.cancel();
-
-                if (selected == eventData.pickInfo.pickedMesh.id) {
-                    selected = -1;
-                } else {
-                    selected = eventData.pickInfo.pickedMesh.id;
-
-                    var position = '&Xscr;:'+planets[selected].position.x+',  &Yscr;:'+planets[selected].position.y+',  &Zscr;:'+planets[selected].position.z;
-
-                    $('.planetInfo .planet-name').text(planets[selected].name);
-                    $('.planetInfo .planet-code').text(planets[selected].code);
-                    $('.planetInfo .planet-position').html(position);
-                    $('.planetInfo .planet-size').html( new Array(planets[selected].size + 1).join('&#9733;') );
-                    $('.planetInfo .planet-rhodium').html( new Array(planets[selected].rhodium + 1).join('&#9733;'));
-                    $('.planetInfo .planet-hazard').html( new Array(planets[selected].hazard + 1).join('&#9733;'));
-                    $('.planetInfo .planet-description').text(planets[selected].description);
-                    $('.planetInfo .zoom').data("id", selected);
-
-                    $('.planetInfo').show();
-
-                    if (read) window.speechSynthesis.speak(createUtterance($('.planetInfo .planet-description').text()));
-
-                    smoothSetTarget(
-                        eventData.pickInfo.pickedMesh.position,
-                        function(){smoothFocus(eventData.pickInfo.pickedMesh.position)}
-                    );
-
-                }
-
-            }
-
-            if (selected == eventData.pickInfo.pickedMesh.id) {
-                scene.highlightLayers[0].addMesh(eventData.pickInfo.pickedMesh, BABYLON.Color3.Yellow());
+        constellations[planets[index].constellation].forEach(function(entry) {
+            
+            if (first_point === null) {
+                first_point = spheres[entry].position;
+                var distance = 1;
             } else {
-                scene.highlightLayers[0].addMesh(eventData.pickInfo.pickedMesh, BABYLON.Color3.Green());
+                var distance = BABYLON.Vector3.Distance(first_point, spheres[entry].position);
             }
 
-            $('.planetName h1').html(planets[eventData.pickInfo.pickedMesh.id].name);
-            $('.planetName').show();
+            plantets_distance.push( {distance: distance, index: entry} );
+        });
 
-        }
+        plantets_distance = plantets_distance.sort(function (a, b) {
+            return a.distance - b.distance;
+        });
 
-    });
+        plantets_distance.forEach(function(entry) {
+            arr_pos.push(spheres[entry.index].position);
+        });
 
+       
+        lines = BABYLON.Mesh.CreateLines("lines", arr_pos, scene);
+        lines.color = BABYLON.Color3.FromHexString("#00FF00");
+        lines.alpha = 0.3;
+
+    }
 
     assetsManager.onFinish = function (tasks) {
 
@@ -400,7 +461,100 @@ $.getJSON('../inscriptions/planets', function(planets) {
 
     });
 
+    $(document).on('click', '#renderCanvas', function(e) {
+
+        var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+
+        var distance = BABYLON.Vector3.Distance(scene.activeCamera.position, pickInfo.pickedMesh.position);
+        if (distance <= 20) {
+            console.log('range');
+            return;
+        }
 
 
-});
+        if (pickInfo.hit && pickInfo.pickedMesh.id != 'skybox') {
+
+            if (selected == pickInfo.pickedMesh.id) {
+
+                if (!currentlyZooming) {
+                    smoothSetTarget(
+                        pickInfo.pickedMesh.position,
+                        function(){smoothZoom(pickInfo.pickedMesh.position)}
+                    );
+                }
+
+            } else {
+
+                selected = pickInfo.pickedMesh.id;
+                showPlanetInfo(selected);
+                scene.highlightLayers[0].addMesh(pickInfo.pickedMesh, BABYLON.Color3.Yellow());
+
+                if (read) {
+                    //window.speechSynthesis.speak(createUtterance($('.planetInfo .planet-description').text()));
+                    speechUtteranceChunker(createUtterance($('.planetInfo .planet-description').text()), {
+                        chunkLength: 120
+                    });
+                }
+
+                if (!currentlyZooming) {
+                setTimeout(
+                    function() {
+                        
+                        if (!currentlyZooming) {
+                            smoothSetTarget(
+                                pickInfo.pickedMesh.position,
+                                function(){smoothFocus(pickInfo.pickedMesh.position)}
+                            );
+                        }
+
+                    }
+                , 700);
+                }
+            }
+
+        }
+
+        for (var i = scene.meshes.length - 1; i >= 0; i--) {
+            if (selected != scene.meshes[i].id) scene.highlightLayers[0].removeMesh(scene.meshes[i]);
+        }
+
+    });
+
+    $(document).on('mousemove', '#renderCanvas', function(e) {
+
+        for (var i = scene.meshes.length - 1; i >= 0; i--) {
+            if (selected != scene.meshes[i].id) scene.highlightLayers[0].removeMesh(scene.meshes[i]);
+        }
+
+        if (typeof lines != "undefined") {
+            lines.dispose();
+        }
+
+        $('.planetName').hide();
+        canvas.style.cursor = "default";
+
+        var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+
+        if (pickInfo.hit && pickInfo.pickedMesh.id != 'skybox') {
+
+
+            canvas.style.cursor = "pointer";
+            
+            drawConstellationLines(pickInfo.pickedMesh.id);
+
+
+            if (selected != pickInfo.pickedMesh.id) scene.highlightLayers[0].addMesh(pickInfo.pickedMesh, BABYLON.Color3.Green());
+
+            $('.planetName h1').html(planets[pickInfo.pickedMesh.id].name);
+            $('.planetName').show();
+
+        }
+
+
+    })
+
+
+
+
+}
 });
