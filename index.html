@@ -5,6 +5,8 @@
     <title>Carte des planètes</title>
 
     <link rel="stylesheet" type="text/css" href="css/app.css">
+    <link rel="apple-touch-icon" href="img/icon-128.png">
+    <link rel="icon" href="favicon.ico">
 
 </head>
 <body>
@@ -17,11 +19,19 @@
     </div>
 
     <div class="box">
-        X <input id="input-x" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
-        Y <input id="input-y" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
-        Z <input id="input-z" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
-        <a href="#" class="goto-center" alt="Centrer sur Rh-Paradize" title="Centrer sur Rh-Paradize"><img src="img/ico-target.png" style="vertical-align: middle;"></a>
-        <a href="#" class="stop-play" alt="Arrêter / Démarrer la lecture" title="Arrêter / Démarrer la lecture"><img src="img/ico-sound-on.png" style="vertical-align: middle;"></a>
+        <div>
+            x <input id="input-x" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+            y <input id="input-y" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+            z <input id="input-z" type="number" value="0" min="-30" max="30" style="width:35px; height:14px;">
+            <a href="#" class="goto-center" alt="Aller à" title="Aller à"><img src="img/ico-target.png" style="vertical-align: middle;"></a>
+            <a href="#" class="stop-play" alt="Arrêter / Démarrer la lecture" title="Arrêter / Démarrer la lecture"><img src="img/ico-sound-on.png" style="vertical-align: middle;"></a>
+        </div>
+        <hr>
+        <div align=left><a href="#" class="goto-planet" data-x="1180" data-y="-1464" data-z="0"><img src="img/ico-planet.png" style="vertical-align: middle;"> Phoenix Origine</a></div>
+        <div align=left><a href="#" class="goto-planet" data-x="1114" data-y="-564" data-z="55"><img src="img/ico-planet.png" style="vertical-align: middle;"> Mansa-55</a></div>
+        <div align=left><a href="#" class="goto-planet" data-x="1214" data-y="-456" data-z="-124"><img src="img/ico-planet.png" style="vertical-align: middle;"> Chamaeleon-124</a></div>
+        <div align=left><a href="#" class="goto-planet" data-x="-1389" data-y="1352" data-z="-1495"><img src="img/ico-planet.png" style="vertical-align: middle;"> Rh-Paradize</a></div>
+
     </div>
 
     <div id="placeholder">

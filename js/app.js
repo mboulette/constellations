@@ -316,7 +316,7 @@ var loadScene = function(planets) {
 
 
     function showPlanetInfo(index) {
-        var position = '&Xscr;:'+planets[index].position.x+',  &Yscr;:'+planets[index].position.y+',  &Zscr;:'+planets[index].position.z;
+        var position = 'x:'+planets[index].position.x+',  y:'+planets[index].position.y+',  z:'+planets[index].position.z;
 
         $('.planetInfo .planet-name').text(planets[index].name);
         $('.planetInfo .planet-code').text(planets[index].code);
@@ -426,6 +426,13 @@ var loadScene = function(planets) {
 
     $(document).on('click', '.goto-center', function(event){                  
         var position = new BABYLON.Vector3($('#input-x').val(), $('#input-y').val(), $('#input-z').val());
+        smoothSetTarget(position, function(){smoothZoom(position)} );
+        $('#renderCanvas').focus();
+    });
+
+    $(document).on('click', '.goto-planet', function(event){                  
+        
+        var position = new BABYLON.Vector3($(this).data('x'), $(this).data('y'), $(this).data('z'));
         smoothSetTarget(position, function(){smoothZoom(position)} );
         $('#renderCanvas').focus();
     });
